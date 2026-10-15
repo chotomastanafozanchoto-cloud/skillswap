@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { RobotCanvas } from './RobotCanvas';
-import { Volume2, VolumeX, FastForward, Play, RotateCcw, ArrowRight, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, FastForward, Play, RotateCcw, ArrowRight, Sparkles, Code2, Cpu } from 'lucide-react';
 
 interface RobotVoiceIntroProps {
   onComplete: () => void;
@@ -39,7 +38,7 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
   const [hasStarted, setHasStarted] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
-  const [synthAvailable, setSynthAvailable] = useState<boolean>(true);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const typingTimerRef = useRef<any>(null);
@@ -48,11 +47,17 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
   useEffect(() => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       synthRef.current = window.speechSynthesis;
-    } else {
-      setSynthAvailable(false);
     }
+    const handleMouseMove = (e: MouseEvent) => {
+      const { innerWidth, innerHeight } = window;
+      const x = (e.clientX / innerWidth - 0.5) * 20; // -10 to 10 deg
+      const y = (e.clientY / innerHeight - 0.5) * -15; // -7.5 to 7.5 deg
+      setMousePos({ x, y });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
     return () => {
       stopAllSpeech();
+      window.removeEventListener('mousemove', handleMouseMove);
     };
   }, []);
 
@@ -66,7 +71,6 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
 
   const speakText = (text: string, onEnd: () => void) => {
     if (isMuted || !synthRef.current) {
-      // Just simulate speech duration
       const estimatedDuration = Math.max(2200, text.length * 55);
       const timer = setTimeout(() => {
         onEnd();
@@ -82,23 +86,17 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
 
-      // Try to choose a high-quality natural English voice
       const voices = synthRef.current.getVoices();
       const englishVoice = voices.find(
-        (v) => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Guy'))
+        (v) => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Guy') || v.name.includes('David'))
       ) || voices.find((v) => v.lang.startsWith('en'));
 
       if (englishVoice) {
         utterance.voice = englishVoice;
       }
 
-      utterance.onend = () => {
-        onEnd();
-      };
-
-      utterance.onerror = () => {
-        onEnd();
-      };
+      utterance.onend = () => onEnd();
+      utterance.onerror = () => onEnd();
 
       synthRef.current.speak(utterance);
     } catch {
@@ -125,7 +123,6 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
 
   const runScriptStep = (lineIndex: number) => {
     if (lineIndex >= SPEECH_SCRIPT.length) {
-      // Finished all lines!
       setIsSpeaking(false);
       const endTimer = setTimeout(() => {
         handleProceed();
@@ -138,9 +135,7 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
     const line = SPEECH_SCRIPT[lineIndex];
     setIsSpeaking(true);
 
-    typeWriterEffect(line.text, () => {
-      // text is finished typing
-    });
+    typeWriterEffect(line.text, () => {});
 
     speakText(line.text, () => {
       setIsSpeaking(false);
@@ -192,12 +187,12 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
         isTransitioning ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
       }`}
       style={{
-        background: 'radial-gradient(ellipse at 50% 40%, #E8F5FF 0%, #CDE9FC 60%, #BAE1F9 100%)',
+        background: 'radial-gradient(ellipse at 50% 35%, #E8F5FF 0%, #D4EDFC 50%, #BFE2F9 100%)',
       }}
     >
       {/* Top Bar Branding & Controls */}
-      <div className="w-full max-w-7xl mx-auto px-6 pt-6 flex items-center justify-between z-20">
-        <div className="flex items-center space-x-3 bg-white/70 backdrop-blur-md px-4 py-2 rounded-full border border-brand-border/60 shadow-soft">
+      <div className="w-full max-w-7xl mx-auto px-6 pt-5 flex items-center justify-between z-20">
+        <div className="flex items-center space-x-3 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-brand-border shadow-soft">
           <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-primary to-brand-navy flex items-center justify-center text-white font-black text-sm shadow-blue-glow">
             SS
           </div>
@@ -240,44 +235,81 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
         </div>
       </div>
 
-      {/* Center 3D Robot Experience */}
-      <div className="relative w-full flex-1 flex items-center justify-center max-w-5xl">
-        <RobotCanvas
-          isSpeaking={isSpeaking}
-          introStage={hasStarted ? 1 : 0}
-          isTransitioningOut={isTransitioning}
-        />
+      {/* Center Robot Hero Experience with 3D Parallax */}
+      <div className="relative w-full flex-1 flex items-center justify-center max-w-4xl px-4 perspective-[1000px]">
+        {/* Glowing Background Radial Aura */}
+        <div className="absolute w-[460px] h-[460px] rounded-full bg-gradient-to-tr from-cyan-400/25 to-blue-500/25 blur-3xl pointer-events-none animate-pulse" />
 
-        {/* Speech Dialogue Bubble */}
+        {/* The Exact Fozan 3D AI Robot - Pure Robot without left/right text */}
+        <div
+          className="relative z-10 flex flex-col items-center justify-center transition-transform duration-300 ease-out select-none"
+          style={{
+            transform: `rotateY(${mousePos.x}deg) rotateX(${mousePos.y}deg) translateY(${isSpeaking ? '-6px' : '0px'})`,
+          }}
+        >
+          {/* 3D Orbiting Holographic Rings */}
+          <div className="absolute w-[440px] h-[440px] border border-cyan-400/40 rounded-full animate-orbit-ring pointer-events-none" />
+          <div className="absolute w-[500px] h-[500px] border border-blue-500/25 rounded-full animate-orbit-ring pointer-events-none [animation-duration:18s] [animation-direction:reverse]" />
+
+          {/* Floor Glowing Platform Disc */}
+          <div className="absolute -bottom-2 w-80 h-16 bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent rounded-full blur-md" />
+          <div className="absolute bottom-2 w-72 h-9 border-2 border-cyan-400/70 rounded-full shadow-[0_0_30px_rgba(56,189,248,0.7)]" />
+
+          {/* Clean Isolated Robot Image */}
+          <div className="relative group flex items-center justify-center">
+            <img
+              src="/robot_clean.png"
+              alt="Fozan AI Robot Host"
+              className="max-h-[62vh] sm:max-h-[68vh] object-contain drop-shadow-[0_25px_40px_rgba(18,59,138,0.32)] transition-all duration-300"
+            />
+
+            {/* Glowing Core Pulse when Speaking */}
+            {isSpeaking && (
+              <div className="absolute top-[26%] left-[50%] -translate-x-1/2 w-9 h-9 rounded-full bg-cyan-400/80 blur-md animate-ping pointer-events-none" />
+            )}
+
+            {/* Waving Hand "Hi!" Representation on Robot's Greeting Hand */}
+            <div className="absolute right-[-10px] sm:right-[5%] top-[44%] sm:top-[42%] z-20 pointer-events-none flex items-center space-x-2">
+              <div className="bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-2xl border-2 border-cyan-400 shadow-soft-lg flex items-center space-x-1.5 animate-bounce">
+                <span className="text-xl sm:text-2xl animate-wave-hi">👋</span>
+                <span className="text-[11px] sm:text-xs font-black text-brand-navy tracking-tight">
+                  Hi, I'm Fozan!
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Spoken Text Dialogue Bubble */}
         {hasStarted && (
-          <div className="absolute bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl z-20">
-            <div className="bg-white/95 backdrop-blur-xl p-5 md:p-6 rounded-2xl border-2 border-brand-border shadow-soft-xl text-center relative transition-all">
-              {/* Glowing pointer triangle */}
+          <div className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 w-11/12 max-w-2xl z-30">
+            <div className="bg-white/95 backdrop-blur-xl p-5 sm:p-6 rounded-3xl border-2 border-brand-border shadow-soft-xl text-center relative transition-all">
+              {/* Pointer triangle */}
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-5 h-5 bg-white border-t-2 border-l-2 border-brand-border rotate-45" />
 
               {/* Speaker Indicator */}
-              <div className="flex items-center justify-center space-x-2 mb-3">
+              <div className="flex items-center justify-center space-x-2 mb-2.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-brand-primary animate-ping" />
-                <span className="text-xs font-extrabold uppercase tracking-wider text-brand-navy">
+                <span className="text-xs font-black uppercase tracking-wider text-brand-navy">
                   Fozan &bull; SkillSwap AI Architect
                 </span>
                 {isSpeaking && (
                   <div className="flex items-center space-x-0.5 ml-2">
                     <span className="w-1 h-3 bg-brand-primary rounded animate-pulse" />
-                    <span className="w-1 h-5 bg-brand-accent rounded animate-pulse delay-75" />
+                    <span className="w-1 h-5 bg-cyan-400 rounded animate-pulse delay-75" />
                     <span className="w-1 h-2 bg-brand-primary rounded animate-pulse delay-150" />
                   </div>
                 )}
               </div>
 
               {/* Typewritten Dialogue */}
-              <p className="text-brand-darkText font-medium text-base md:text-lg min-h-[3.6rem] flex items-center justify-center leading-relaxed">
+              <p className="text-brand-darkText font-semibold text-sm sm:text-base md:text-lg min-h-[3.6rem] flex items-center justify-center leading-relaxed px-2">
                 {displayedText}
                 <span className="inline-block w-2 h-5 bg-brand-primary ml-1 animate-pulse" />
               </p>
 
               {/* Progress Indicator */}
-              <div className="flex justify-center items-center space-x-1.5 mt-4">
+              <div className="flex justify-center items-center space-x-1.5 mt-3">
                 {SPEECH_SCRIPT.map((_, idx) => (
                   <div
                     key={idx}
@@ -305,18 +337,18 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
           </div>
         )}
 
-        {/* Start Overlay if not started yet */}
+        {/* Start Overlay if user hasn't clicked yet */}
         {!hasStarted && (
           <div className="absolute inset-0 flex items-center justify-center bg-slate-900/10 backdrop-blur-[2px] z-30">
             <div className="bg-white/95 backdrop-blur-xl p-8 rounded-3xl border-2 border-brand-border shadow-soft-xl max-w-md text-center mx-4">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-primary to-brand-navy mx-auto flex items-center justify-center text-white mb-4 shadow-blue-glow">
                 <Sparkles className="w-8 h-8" />
               </div>
-              <h2 className="text-2xl font-extrabold text-brand-navy mb-2">
-                Meet Your 3D AI Host
+              <h2 className="text-2xl font-black text-brand-navy mb-2">
+                Meet Fozan’s 3D AI Host
               </h2>
               <p className="text-brand-mutedText text-sm mb-6 leading-relaxed">
-                Experience the futuristic voice introduction by founder Fozan, explaining the problem, the vision, and the solution.
+                Experience the interactive voice introduction explaining the problem, the vision, and how SkillSwap unlocks student opportunities.
               </p>
               <div className="flex flex-col space-y-3">
                 <button
@@ -338,7 +370,7 @@ export const RobotVoiceIntro: React.FC<RobotVoiceIntroProps> = ({ onComplete, is
         )}
       </div>
 
-      {/* Subtle Bottom Credits */}
+      {/* Bottom Tagline */}
       <div className="w-full max-w-7xl mx-auto px-6 pb-4 text-center z-10">
         <span className="text-xs font-medium text-brand-mutedText">
           “Fozan, web developer as a problem solver.” &bull; Learn. Connect. Collaborate. Earn.

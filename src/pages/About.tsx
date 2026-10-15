@@ -78,10 +78,12 @@ export default function About({ onReplayIntro }: AboutProps) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             {/* Visual Avatar */}
             <div className="lg:col-span-4 text-center">
-              <div className="w-36 h-36 rounded-3xl bg-gradient-to-tr from-brand-navy via-brand-primary to-brand-glow p-1.5 shadow-soft-xl mx-auto mb-5">
-                <div className="w-full h-full rounded-[22px] bg-white flex items-center justify-center font-black text-4xl text-brand-navy">
-                  FZ
-                </div>
+              <div className="w-36 h-36 rounded-3xl overflow-hidden border-2 border-brand-primary p-1 shadow-soft-xl mx-auto mb-5">
+                <img
+                  src="/fozan_jersey.jpg"
+                  alt="Fozan - Founder of SkillSwap"
+                  className="w-full h-full object-cover rounded-[20px]"
+                />
               </div>
               <h2 className="text-2xl font-black text-brand-navy">Fozan</h2>
               <p className="text-xs font-bold text-brand-primary uppercase tracking-wider mt-1">

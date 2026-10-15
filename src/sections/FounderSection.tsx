@@ -50,10 +50,12 @@ export const FounderSection: React.FC<FounderSectionProps> = ({ onReplayIntro })
           {/* Left Column: Visual Profile Card */}
           <div className="lg:col-span-5">
             <div className="bg-white rounded-3xl p-8 border-2 border-brand-border shadow-soft-xl relative">
-              <div className="w-24 h-24 rounded-3xl bg-gradient-to-tr from-brand-primary via-blue-600 to-brand-navy p-1 shadow-blue-glow mb-6 mx-auto lg:mx-0">
-                <div className="w-full h-full rounded-[22px] bg-white flex items-center justify-center font-black text-2xl text-brand-navy">
-                  FZ
-                </div>
+              <div className="w-28 h-28 rounded-3xl overflow-hidden border-2 border-brand-primary p-1 shadow-soft-xl mb-6 mx-auto lg:mx-0">
+                <img
+                  src="/fozan_jersey.jpg"
+                  alt="Fozan - Web Developer as a Problem Solver"
+                  className="w-full h-full object-cover rounded-[20px]"
+                />
               </div>
 
               <div className="text-center lg:text-left">

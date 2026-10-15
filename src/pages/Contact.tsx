@@ -102,6 +102,26 @@ export default function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Left: Contact Channels Cards */}
           <div className="lg:col-span-5 space-y-4">
+            {/* Founder Direct Card with Uploaded Photo */}
+            <div className="bg-white p-5 rounded-3xl border-2 border-brand-border shadow-soft mb-6 flex items-center space-x-4">
+              <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-brand-primary p-0.5 shrink-0 shadow-soft">
+                <img
+                  src="/fozan_jersey.jpg"
+                  alt="Fozan - Web Developer as a Problem Solver"
+                  className="w-full h-full object-cover rounded-[14px]"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-brand-primary bg-brand-lightBlue px-2 py-0.5 rounded-full border border-brand-sky">
+                  Founder & Architect
+                </span>
+                <h4 className="text-base font-black text-brand-navy mt-1">Fozan</h4>
+                <p className="text-xs text-brand-mutedText font-semibold">
+                  “Web developer as a problem solver.”
+                </p>
+              </div>
+            </div>
+
             <h3 className="text-base font-extrabold text-brand-navy mb-4">
               Direct Communication Channels
             </h3>
